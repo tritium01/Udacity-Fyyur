@@ -12,7 +12,7 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import date
 import logging
 from logging import Formatter, FileHandler
-from flask_wtf import Form
+from flask_wtf import Form, CsrfProtect
 from forms import *
 from flask_migrate import Migrate
 #----------------------------------------------------------------------------#
@@ -23,6 +23,8 @@ app = Flask(__name__)
 moment = Moment(app)
 app.config.from_object('config')
 db = SQLAlchemy(app)
+csrf= CsrfProtect()
+csrf.init_app(app)
 migrate = Migrate(app, db)
 
 # DONE: connect to a local postgresql database
@@ -199,15 +201,16 @@ def create_venue_form():
 def create_venue_submission():
   # DONE: insert form data as a new Venue record in the db, instead
   # DONE: modify data to be the data object returned from db insertion
-  form = VenueForm
+  form = VenueForm()
+  error= False
   if not form.validate():
     flash(form.errors)
     return redirect(url_for('create_venue_form'))
   try:
     data = request.form
-    seeking = data.get('seeking_description')
+    seeking = len(data.get('seeking_description'))
     seeking_talent = False
-    if seeking != '':
+    if seeking != 0:
       seeking_talent = True
 
     venue = Venue(
@@ -226,10 +229,13 @@ def create_venue_submission():
     db.session.add(venue)
     db.session.commit()
   except:
+    error= True
     db.session.rollback()
     flash('An error occurred. Venue ' + request.form['name'] + ' could not be listed.')
   finally:
     db.session.close()
+
+  if not error:
     flash('Venue ' + request.form['name'] + ' was successfully listed!')
 
     # on successful db insert, flash success
@@ -454,23 +460,23 @@ def create_artist_submission():
   # called upon submitting the new artist listing form
   # DONE: insert form data as a new Venue record in the db, instead
   # DONE: modify data to be the data object returned from db insertion
-  form = ArtistForm
+  error = False
+  form = ArtistForm()
   if not form.validate():
     flash(form.errors)
     return redirect(url_for('create_artist_form'))
-
   try:
     data = request.form
-    seeking= False
-    if seeking != '':
-      seeking= True
-
+    seeking_venues = len(data.get('seeking_description'))
+    seeking = False
+    if seeking_venues != 0:
+      seeking = True  
     artist= Artist(
       name= data.get('name'),
       city= data.get('city'),
       state= data.get('state'),
       phone= data.get('phone'),
-      genres = data.get('genres'),
+      genres = data.getlist('genres'),
       image_link= data.get('image_link'),
       website_link = data.get('website_link'),
       facebook_link= data.get('facebook_link'),
@@ -480,15 +486,19 @@ def create_artist_submission():
     db.session.add(artist)
     db.session.commit()
   except:
+    error = True
     db.session.rollback()
+    print(sys.exc_info())
     flash('An error occurred. Artist ' + request.form['name'] + ' could not be listed.')
   finally:
     db.session.close()
+  
+  if not error:
     flash('Artist ' + request.form['name'] + ' was successfully listed!')
   # on successful db insert, flash success
   # DONE: on unsuccessful db insert, flash an error instead.
   # e.g., flash('An error occurred. Artist ' + data.name + ' could not be listed.')
-    return render_template('pages/home.html')
+  return render_template('pages/home.html')
 
 
 #  Shows
@@ -522,6 +532,7 @@ def create_shows():
 def create_show_submission():
   # called to create new shows in the db, upon submitting new show listing form
   # DONE: insert form data as a new Show record in the db, instead
+  error = False
   try:
     data = request.form
     show = Show(
@@ -532,10 +543,14 @@ def create_show_submission():
     db.session.add(show)
     db.session.commit()
   except:
+    error = True
     db.session.rollback()
     flash('An error occurred. Show could not be listed.')
   finally:
     db.session.close()
+    
+
+  if not error:
     flash('Show was successfully listed!')
   # on successful db insert, flash success
   # DONE: on unsuccessful db insert, flash an error instead.
