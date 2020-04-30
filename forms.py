@@ -46,7 +46,7 @@ class VenueForm(Form):
         'address', validators=[DataRequired(), Length(-1, 200)]
     )
     phone = StringField(
-        'phone'
+        'phone', validators=[Length(-1, 10)]
     )
     image_link = StringField(
         'image_link', validators=[Length(-1, 500), URL(), Optional()]
@@ -63,7 +63,7 @@ class VenueForm(Form):
         'website_link', validators=[Length(-1, 500), URL(), Optional()]
     )
     seeking_description = StringField(
-        'seeking_description'
+        'seeking_description', validators=[Optional()]
     )
 
 class ArtistForm(Form):
@@ -78,8 +78,8 @@ class ArtistForm(Form):
         choices= State.choices()
     )
     phone = StringField(
-        # TODO implement validation logic for state
-        'phone'
+        # DONE implement validation logic for state
+        'phone' , validators=[Length(-1, 10)]
     )
     image_link = StringField(
         'image_link', validators=[Length(-1, 500), URL(), Optional()]
@@ -97,8 +97,8 @@ class ArtistForm(Form):
         'website_link', validators=[Length(-1, 500), URL(), Optional()]
     )
     seeking_description = StringField(
-        'seeking_description', validators=[DataRequired()]
+        'seeking_description', validators=[Optional()]
     )
 
-# TODO IMPLEMENT NEW ARTIST FORM AND NEW SHOW FORM
+# DONE IMPLEMENT NEW ARTIST FORM AND NEW SHOW FORM
 
